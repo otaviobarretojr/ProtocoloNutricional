@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Protocolo 2.300 kcal — Dashboard • Dieta • Lista de Compras</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#121925;
+      --muted:#9fb0c3;
+      --text:#e8f0ff;
+      --accent:#4da3ff;
+      --accent2:#35d07f;
+      --warn:#ffcc66;
+      --border:rgba(255,255,255,.08);
+      --shadow:0 10px 30px rgba(0,0,0,.25);
+      --radius:14px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: linear-gradient(180deg, #0b0f14, #070a0e);
+      color: var(--text);
+    }
+    .wrap{ max-width: 1040px; margin: 0 auto; padding: 18px; }
+    h1{ font-size: 20px; margin: 0 0 8px; }
+    h2{ font-size: 15px; margin: 0 0 8px; }
+    .sub{ color: var(--muted); margin: 0 0 14px; font-size: 13px; line-height: 1.35; }
+    .pill{
+      font-size: 12px; padding: 4px 10px; border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10); color: var(--muted);
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .pill.mand{ color:#d7ecff; border-color: rgba(77,163,255,.35); background: rgba(77,163,255,.08); }
+    .pill.opt{ color:#ffe8b3; border-color: rgba(255,204,102,.35); background: rgba(255,204,102,.08); }
+    .pill.good{ color:#dfffeF; border-color: rgba(53,208,127,.35); background: rgba(53,208,127,.08); }
+    .pill.warn{ color:#ffe8b3; border-color: rgba(255,204,102,.35); background: rgba(255,204,102,.08); }
+    .card{
+      background: rgba(18,25,37,.92);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .row{ display:flex; gap:10px; align-items:center; justify-content: space-between; flex-wrap:wrap; }
+    .tabs{ display:flex; gap:8px; margin: 10px 0 14px; flex-wrap:wrap; }
+    .tabbtn{
+      padding:10px 12px; border-radius: 12px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .tabbtn.active{ background: rgba(77,163,255,.20); border-color: rgba(77,163,255,.55); }
+    .tab{ display:none; }
+    .tab.active{ display:block; }
+
+    /* Dashboard layout */
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 900px){ .grid2{ grid-template-columns: 1fr; } }
+    .kpis{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+    @media (min-width: 520px){ .kpis{ grid-template-columns: repeat(4, 1fr);} }
+    .kpi{
+      padding: 10px; border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .kpi .t{ color: var(--muted); font-size: 12px; }
+    .kpi .v{ font-size: 16px; font-weight: 800; margin-top: 2px; }
+    .kpi .s{ color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .bar{
+      height: 10px; border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      overflow:hidden;
+      border: 1px solid var(--border);
+      margin-top: 10px;
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(77,163,255,.92), rgba(53,208,127,.92));
+    }
+    .note{ color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 10px; }
+    .small{ font-size: 12px; color: var(--muted); }
+
+    /* Diet checklist */
+    .meal{ margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .meal:first-child{ margin-top:0; padding-top:0; border-top:0; }
+    .when{ color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .items{ display:flex; flex-direction: column; gap: 8px; }
+    label.item{
+      display:flex; gap: 10px; align-items:flex-start;
+      padding: 10px 10px; border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      cursor:pointer;
+    }
+    label.item:hover{ border-color: rgba(77,163,255,.30); }
+    .meta{ display:flex; flex-direction: column; gap: 2px; width:100%; }
+    .name{ display:flex; gap: 8px; align-items:center; justify-content: space-between; flex-wrap: wrap; }
+    .nm{ font-weight: 700; font-size: 13px; }
+    .nums{ color: var(--muted); font-size: 12px; }
+    .tags{ display:flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+    input[type="checkbox"]{ width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); }
+
+    .btns{ display:flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    button{
+      background: rgba(77,163,255,.12);
+      border: 1px solid rgba(77,163,255,.35);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    button:hover{ background: rgba(77,163,255,.18); }
+
+    /* Shopping */
+    .shop-grid{ display:grid; grid-template-columns: 1fr; gap: 10px; }
+    .shop-item{
+      display:flex; gap: 10px; align-items:center;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .shop-item .left{ display:flex; gap:10px; align-items:center; flex:1; }
+    .shop-item .title{ font-weight: 800; font-size: 13px; }
+    .shop-item .qty{ color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .shop-actions{ margin-top: 12px; display:flex; gap: 10px; flex-wrap: wrap; }
+    .canvasWrap{ display:flex; align-items:center; justify-content:center; }
+    canvas{ max-width: 240px; width:240px; height:240px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="row">
+      <div>
+        <h1>Protocolo de Dieta — 2.300 kcal</h1>
+        <p class="sub">
+          Marque o que você consumiu na aba <b>Dieta</b>. O <b>Dashboard</b> mostra o atingimento da meta em tempo real.
+          A lista de compras tem checklist para 1 semana.
+        </p>
+      </div>
+      <div class="pill mand">Base: 2.300 kcal • P 200g • C 206g • G 75g</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="dashboard">Dashboard</button>
+      <button class="tabbtn" data-tab="diet">Dieta (Seg–Sex)</button>
+      <button class="tabbtn" data-tab="weekend">Dieta Fim de Semana</button>
+      <button class="tabbtn" data-tab="shop">Lista de Compras</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="tab active">
+      <div class="grid2">
+        <div class="card">
+          <div class="row">
+            <div class="pill">Atingimento da meta</div>
+            <div class="pill" id="pctPill">0%</div>
+          </div>
+
+          <div class="canvasWrap" style="margin-top:10px;">
+            <canvas id="donut" width="240" height="240" aria-label="Gráfico de atingimento"></canvas>
+          </div>
+
+          <div class="card" style="margin-top:12px;">
+            <div class="row">
+              <div class="pill">Dia selecionado</div>
+              <div class="pill" id="dayLabel">—</div>
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <button id="btnPrevDay" title="Dia anterior">◀</button>
+                <input id="dayPicker" type="date" style="padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.04); color:var(--text);"/>
+                <button id="btnNextDay" title="Próximo dia">▶</button>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button id="btnOpenDay">Abrir dia</button>
+                <button id="btnCloseDay">Fechar dia</button>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:12px;">
+              <div class="pill">Gasto calórico (kcal)</div>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input id="expenditureInput" type="number" min="0" step="1" placeholder="Ex.: 3200"
+                  style="width:160px; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.04); color:var(--text);" />
+                <div class="pill" id="netPill">Saldo: —</div>
+                <div class="pill" id="burnPill">Consumo/Gasto: —</div>
+              </div>
+            </div>
+
+            <div class="bar" style="margin-top:12px;"><div id="burnBarFill"></div></div>
+            <div class="note">Dica: o gasto calórico é manual (você preenche). O dashboard calcula o saldo (gasto − consumo) e a razão consumo/gasto.</div>
+          </div>
+
+          <div class="bar"><div id="barFill"></div></div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="t">Calorias</div>
+              <div class="v" id="kcalNow">0</div>
+              <div class="s">de <span id="kcalTarget">2300</span> kcal</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Proteína</div>
+              <div class="v" id="pNow">0 g</div>
+              <div class="s">de <span id="pTarget">200</span> g</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Carbo</div>
+              <div class="v" id="cNow">0 g</div>
+              <div class="s">de <span id="cTarget">206</span> g</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Gordura</div>
+              <div class="v" id="fNow">0 g</div>
+              <div class="s">de <span id="fTarget">75</span> g</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row">
+            <div class="pill">Resumo do consumo</div>
+            <div class="pill" id="statusPill">—</div>
+          </div>
+          <div class="note" id="summaryText" style="margin-top:10px;"></div>
+
+          <div class="btns">
+            <button id="btnGoDiet">Ir para Dieta</button>
+            <button id="btnCheckAllMand">Marcar todos obrigatórios</button>
+            <button id="btnResetDiet">Zerar marcações da dieta</button>
+          </div>
+
+          <div class="note">
+            <b>Obrigatórios</b> = base do protocolo (performance + constância).<br/>
+            <b>Opcionais</b> = ajustes para subir kcal ou reduzir estrategicamente sem bagunçar o dia.<br/>
+            <span style="color:var(--warn)"><b>Ajuste final:</b> escolha <b>apenas 1</b>.</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="small" style="margin-top:14px;">
+        Observação: valores são aproximados (rótulos/marcas variam). O importante é bater o alvo diário e manter consistência.
+      </p>
+    </div>
+
+    <!-- DIETA -->
+    <div id="diet" class="tab">
+      <div class="card" style="margin-bottom:14px;">
+        <div class="row">
+          <div class="pill">Checklist do dia</div>
+          <div class="pill" id="dietHint">Marque o que você consumiu</div>
+        </div>
+      </div>
+      <div class="card" id="checklist"></div>
+      <div class="card" style="margin-top:14px;">
+        <div class="row">
+          <div class="pill">Ações rápidas</div>
+          <div class="pill">Progresso fica salvo no navegador</div>
+        </div>
+        <div class="btns">
+          <button id="btnBackDash">Voltar ao Dashboard</button>
+          <button id="btnResetDiet2">Zerar marcações da dieta</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- DIETA FIM DE SEMANA -->
+    <div id="weekend" class="tab">
+      <div class="card" style="margin-bottom:14px;">
+        <div class="row">
+          <div class="pill">Checklist (Sáb/Dom)</div>
+          <div class="pill" id="weekendHint">Dieta para dia de cardio/HIIT (kcal reduzidas)</div>
+        </div>
+        <div class="note" style="margin-top:10px;">
+          Use esta aba em <b>sábado</b> e <b>domingo</b>. O dashboard automaticamente muda a meta quando a data selecionada for fim de semana.
+        </div>
+      </div>
+      <div class="card" id="checklistWeekend"></div>
+      <div class="card" style="margin-top:14px;">
+        <div class="row">
+          <div class="pill">Ações rápidas</div>
+          <div class="pill">Progresso fica salvo por data</div>
+        </div>
+        <div class="btns">
+          <button id="btnBackDashWeekend">Voltar ao Dashboard</button>
+          <button id="btnResetWeekend">Zerar marcações (fim de semana)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTA DE COMPRAS -->
+    <div id="shop" class="tab">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h2>Lista de Compras (1 semana)</h2>
+            <div class="sub" style="margin:6px 0 0;">
+              Checklist para marcar o que já foi comprado. Quantidades baseadas no protocolo (1 semana).
+            </div>
+          </div>
+          <div class="pill good" id="shopPctPill">0% comprado</div>
+        </div>
+
+        <div class="bar" style="margin-top:12px;"><div id="shopBarFill"></div></div>
+
+        <div class="shop-grid" id="shopList" style="margin-top:12px;"></div>
+
+        <div class="shop-actions">
+          <button id="btnShopAll">Marcar tudo como comprado</button>
+          <button id="btnShopReset">Zerar compras</button>
+          <button id="btnShopToDash">Voltar ao Dashboard</button>
+        </div>
+
+        <div class="note">
+          Quantidades semanais: base diária do protocolo. Se você usar opcionais de carbo com frequência, considere comprar um pouco a mais de arroz/banana/batata-doce.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // =========================
+  // CONFIG
+  // =========================
+  const TARGET_WEEKDAY = { kcal: 2300, p: 200, c: 206, f: 75 };
+  // Fim de semana (cardio/HIIT): leve redução calórica.
+  const TARGET_WEEKEND = { kcal: 2100, p: 200, c: 170, f: 70 };
+
+  // Itens da dieta (Seg–Sex)
+  const ITEMS_WEEKDAY = [
+    { id:"b_eggs2", meal:"Café da manhã (07h–08h)", when:"Objetivo: acordar o metabolismo + proteína alta", name:"2 ovos inteiros", kcal:140, p:12, c:1, f:10, kind:"mandatory" },
+    { id:"b_whites4", meal:"Café da manhã (07h–08h)", when:"", name:"4 claras", kcal:68, p:14, c:1, f:0, kind:"mandatory" },
+    { id:"b_sp100", meal:"Café da manhã (07h–08h)", when:"", name:"100 g batata-doce", kcal:86, p:2, c:20, f:0, kind:"mandatory" },
+    { id:"b_oats20_opt", meal:"Café da manhã (07h–08h)", when:"", name:"(Opcional) + 20 g aveia", kcal:78, p:3, c:13, f:2, kind:"optional", mx:"ajuste_final" },
+
+    { id:"l_chicken200", meal:"Almoço (12h–13h)", when:"Objetivo: refeição âncora do dia", name:"200 g frango grelhado", kcal:330, p:62, c:0, f:7, kind:"mandatory" },
+    { id:"l_rice120", meal:"Almoço (12h–13h)", when:"", name:"120 g arroz branco (cozido)", kcal:156, p:3, c:35, f:0, kind:"mandatory" },
+    { id:"l_veg", meal:"Almoço (12h–13h)", when:"", name:"Legumes à vontade", kcal:30, p:2, c:6, f:0, kind:"mandatory" },
+    { id:"l_oil10", meal:"Almoço (12h–13h)", when:"", name:"10 g azeite (medido)", kcal:90, p:0, c:0, f:10, kind:"mandatory" },
+    { id:"l_rice_plus60", meal:"Almoço (12h–13h)", when:"", name:"(Opcional) + 60 g arroz branco (cozido)", kcal:78, p:1, c:17, f:0, kind:"optional" },
+    { id:"l_oil_minus5", meal:"Almoço (12h–13h)", when:"", name:"(Opcional) Estratégico: - 5 g azeite", kcal:-45, p:0, c:0, f:-5, kind:"optional" },
+
+    { id:"s_banana", meal:"Pré-treino / Lanche (15h30–16h30)", when:"Objetivo: energia + proteção muscular", name:"1 banana média", kcal:105, p:1, c:27, f:0, kind:"mandatory" },
+    { id:"s_whey30", meal:"Pré-treino / Lanche (15h30–16h30)", when:"", name:"Whey 30 g", kcal:120, p:24, c:3, f:2, kind:"mandatory" },
+    { id:"s_banana_plus", meal:"Pré-treino / Lanche (15h30–16h30)", when:"", name:"(Opcional) + 1 banana", kcal:105, p:1, c:27, f:0, kind:"optional" },
+
+    { id:"d_patinho200", meal:"Jantar / Pós-treino (18h30–19h30)", when:"Objetivo: recuperar músculo + repor glicogênio", name:"200 g patinho moído", kcal:340, p:50, c:0, f:14, kind:"mandatory" },
+    { id:"d_chicken200", meal:"Jantar / Pós-treino (18h30–19h30)", when:"", name:"OU 200 g frango (se não usar patinho)", kcal:330, p:62, c:0, f:7, kind:"optional", mx:"proteina_jantar" },
+    { id:"d_sp150", meal:"Jantar / Pós-treino (18h30–19h30)", when:"", name:"150 g batata-doce", kcal:129, p:3, c:30, f:0, kind:"mandatory" },
+    { id:"d_veg", meal:"Jantar / Pós-treino (18h30–19h30)", when:"", name:"Legumes", kcal:30, p:2, c:6, f:0, kind:"mandatory" },
+    { id:"d_oil5", meal:"Jantar / Pós-treino (18h30–19h30)", when:"", name:"5 g azeite", kcal:45, p:0, c:0, f:5, kind:"mandatory" },
+    { id:"d_sp_plus100", meal:"Jantar / Pós-treino (18h30–19h30)", when:"", name:"(Opcional) + 100 g batata-doce", kcal:86, p:2, c:20, f:0, kind:"optional" },
+    { id:"d_oil_minus5", meal:"Jantar / Pós-treino (18h30–19h30)", when:"", name:"(Opcional) Estratégico: - 5 g azeite", kcal:-45, p:0, c:0, f:-5, kind:"optional" },
+
+    { id:"n_yogurt170", meal:"Ceia (21h30–22h30)", when:"Objetivo: fechar proteína + gordura boa", name:"Iogurte natural zero (170 g)", kcal:90, p:12, c:6, f:0, kind:"mandatory" },
+    { id:"n_pb20", meal:"Ceia (21h30–22h30)", when:"", name:"Pasta de amendoim 20 g", kcal:120, p:5, c:4, f:10, kind:"mandatory" },
+    { id:"n_whey30", meal:"Ceia (21h30–22h30)", when:"", name:"Whey 30 g", kcal:120, p:24, c:3, f:2, kind:"mandatory" },
+    { id:"n_eggs2", meal:"Ceia (21h30–22h30)", when:"", name:"(Opcional) 2 ovos inteiros", kcal:140, p:12, c:1, f:10, kind:"optional" },
+    { id:"n_pb_minus10", meal:"Ceia (21h30–22h30)", when:"", name:"(Opcional) Estratégico: - 10 g pasta de amendoim", kcal:-60, p:-2.5, c:-2, f:-5, kind:"optional" },
+
+    { id:"x_cashew15", meal:"Ajuste final (OBRIGATÓRIO — escolha 1)", when:"Para bater EXATAMENTE 2.300 kcal", name:"15 g castanha de caju", kcal:83, p:2.7, c:4.6, f:6.6, kind:"mandatory", mx:"ajuste_final" },
+    { id:"x_oats20", meal:"Ajuste final (OBRIGATÓRIO — escolha 1)", when:"Para bater EXATAMENTE 2.300 kcal", name:"+ 20 g aveia no café da manhã", kcal:78, p:3, c:13, f:2, kind:"mandatory", mx:"ajuste_final" }
+  ];
+
+  // Itens Fim de Semana
+  const ITEMS_WEEKEND = [
+    { id:"w_b_eggs2", meal:"Café da manhã (07h–08h)", when:"Objetivo: proteína alta + energia moderada", name:"2 ovos inteiros", kcal:140, p:12, c:1, f:10, kind:"mandatory" },
+    { id:"w_b_whites4", meal:"Café da manhã (07h–08h)", when:"", name:"4 claras", kcal:68, p:14, c:1, f:0, kind:"mandatory" },
+    { id:"w_b_sp80", meal:"Café da manhã (07h–08h)", when:"", name:"80 g batata-doce", kcal:69, p:1.6, c:16, f:0, kind:"mandatory" },
+
+    { id:"w_l_chicken200", meal:"Almoço (12h–13h)", when:"Objetivo: âncora do dia (leve)", name:"200 g frango grelhado", kcal:330, p:62, c:0, f:7, kind:"mandatory" },
+    { id:"w_l_rice80", meal:"Almoço (12h–13h)", when:"", name:"80 g arroz branco (cozido)", kcal:104, p:2, c:23, f:0, kind:"mandatory" },
+    { id:"w_l_veg", meal:"Almoço (12h–13h)", when:"", name:"Legumes à vontade", kcal:30, p:2, c:6, f:0, kind:"mandatory" },
+    { id:"w_l_oil10", meal:"Almoço (12h–13h)", when:"", name:"10 g azeite (medido)", kcal:90, p:0, c:0, f:10, kind:"mandatory" },
+
+    { id:"w_s_banana", meal:"Lanche (15h30–16h30)", when:"Objetivo: manter performance no cardio/HIIT", name:"1 banana média", kcal:105, p:1, c:27, f:0, kind:"mandatory" },
+    { id:"w_s_whey30", meal:"Lanche (15h30–16h30)", when:"", name:"Whey 30 g", kcal:120, p:24, c:3, f:2, kind:"mandatory" },
+
+    { id:"w_d_chicken200", meal:"Jantar (18h30–19h30)", when:"Objetivo: recuperar sem exagero de carbo", name:"200 g frango grelhado", kcal:330, p:62, c:0, f:7, kind:"mandatory" },
+    { id:"w_d_sp100", meal:"Jantar (18h30–19h30)", when:"", name:"100 g batata-doce", kcal:86, p:2, c:20, f:0, kind:"mandatory" },
+    { id:"w_d_veg", meal:"Jantar (18h30–19h30)", when:"", name:"Legumes", kcal:30, p:2, c:6, f:0, kind:"mandatory" },
+    { id:"w_d_oil5", meal:"Jantar (18h30–19h30)", when:"", name:"5 g azeite", kcal:45, p:0, c:0, f:5, kind:"mandatory" },
+
+    { id:"w_n_yogurt170", meal:"Ceia (21h30–22h30)", when:"Objetivo: fechar proteína + gordura boa", name:"Iogurte natural zero (170 g)", kcal:90, p:12, c:6, f:0, kind:"mandatory" },
+    { id:"w_n_pb15", meal:"Ceia (21h30–22h30)", when:"", name:"Pasta de amendoim 15 g", kcal:90, p:4, c:3, f:7.5, kind:"mandatory" },
+    { id:"w_n_whey30", meal:"Ceia (21h30–22h30)", when:"", name:"Whey 30 g", kcal:120, p:24, c:3, f:2, kind:"mandatory" },
+    { id:"w_n_eggs2_opt", meal:"Ceia (21h30–22h30)", when:"", name:"(Opcional) 2 ovos inteiros (se fome)", kcal:140, p:12, c:1, f:10, kind:"optional" }
+  ];
+
+  // =========================
+  // STORE (por data)
+  // =========================
+  const STORE_KEY = "protocol_day_store_v1";
+  const loadStore = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch { return {}; } };
+  const saveStore = (store) => localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  const store = loadStore();
+
+  // Date helpers
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const toISODate = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+  const parseISODate = (s) => { const [y,m,dd] = s.split("-").map(Number); return new Date(y,(m||1)-1,dd||1); };
+  const weekdayLabel = (d) => { const names=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"]; return `${names[d.getDay()]} • ${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; };
+  const isWeekend = (d) => d.getDay()===0 || d.getDay()===6;
+
+  let activeDate = toISODate(new Date());
+
+  // UI refs
+  const dayPicker = document.getElementById("dayPicker");
+  const dayLabel = document.getElementById("dayLabel");
+  const expenditureInput = document.getElementById("expenditureInput");
+  const netPill = document.getElementById("netPill");
+  const burnPill = document.getElementById("burnPill");
+  const burnBarFill = document.getElementById("burnBarFill");
+
+  // Tabs
+  function setTab(tabId){
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
+    document.getElementById(tabId).classList.add("active");
+    document.querySelector(`.tabbtn[data-tab="${tabId}"]`).classList.add("active");
+  }
+  document.querySelectorAll(".tabbtn").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
+
+  document.getElementById("btnGoDiet").addEventListener("click", () => setTab("diet"));
+  document.getElementById("btnBackDash").addEventListener("click", () => setTab("dashboard"));
+  document.getElementById("btnBackDashWeekend").addEventListener("click", () => setTab("dashboard"));
+  document.getElementById("btnShopToDash").addEventListener("click", () => setTab("dashboard"));
+
+  // Store per day
+  function ensureDay(dateISO){
+    if (!store[dateISO]){
+      store[dateISO] = { weekday_state:{}, weekend_state:{}, expenditure_kcal:"", closed:false };
+      saveStore(store);
+    }
+    return store[dateISO];
+  }
+  const getDayData = () => ensureDay(activeDate);
+
+  function getPlanForActiveDate(){
+    const d = parseISODate(activeDate);
+    return isWeekend(d)
+      ? { plan:"weekend", items: ITEMS_WEEKEND, target: TARGET_WEEKEND }
+      : { plan:"weekday", items: ITEMS_WEEKDAY, target: TARGET_WEEKDAY };
+  }
+
+  // Rendering helpers
+  const byMeal = (items) => {
+    const map = new Map();
+    items.forEach(it => {
+      if (!map.has(it.meal)) map.set(it.meal, { when: it.when || "", items: [] });
+      const entry = map.get(it.meal);
+      if (it.when && !entry.when) entry.when = it.when;
+      entry.items.push(it);
+    });
+    return map;
+  };
+  const fmt = (n, digits=0) => {
+    const v = Number(n);
+    if (Number.isNaN(v)) return "0";
+    return v.toFixed(digits).replace(".", ",");
+  };
+
+  function enforceMutualExclusion(container, items, changedId, checked){
+    const changed = items.find(x => x.id === changedId);
+    if (!changed || !changed.mx || !checked) return;
+    container.querySelectorAll(`input[data-mx="${changed.mx}"]`).forEach(cb => { if (cb.id !== changedId) cb.checked = false; });
+  }
+
+  function renderChecklist(containerId, items, stateObj){
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    const meals = byMeal(items);
+
+    meals.forEach((group, mealName) => {
+      const sec = document.createElement("div");
+      sec.className = "meal";
+
+      const h2 = document.createElement("h2");
+      h2.textContent = mealName;
+      sec.appendChild(h2);
+
+      if (group.when){
+        const when = document.createElement("div");
+        when.className = "when";
+        when.textContent = group.when;
+        sec.appendChild(when);
+      }
+
+      const itemsDiv = document.createElement("div");
+      itemsDiv.className = "items";
+
+      group.items.forEach(it => {
+        const wrap = document.createElement("label");
+        wrap.className = "item";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = it.id;
+        cb.checked = !!stateObj[it.id];
+        if (it.mx) cb.dataset.mx = it.mx;
+
+        cb.addEventListener("change", (e) => {
+          if (getDayData().closed){
+            e.target.checked = !!stateObj[it.id];
+            return;
+          }
+          enforceMutualExclusion(container, items, it.id, e.target.checked);
+          stateObj[it.id] = e.target.checked;
+
+          if (it.mx && e.target.checked){
+            container.querySelectorAll(`input[data-mx="${it.mx}"]`).forEach(other => { stateObj[other.id] = other.checked; });
+          }
+          saveStore(store);
+          updateAll();
+        });
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const name = document.createElement("div");
+        name.className = "name";
+
+        const nm = document.createElement("div");
+        nm.className = "nm";
+        nm.textContent = it.name;
+
+        const nums = document.createElement("div");
+        nums.className = "nums";
+        const kcal = fmt(it.kcal, 0);
+        const p = fmt(it.p, it.p % 1 ? 1 : 0);
+        const c = fmt(it.c, it.c % 1 ? 1 : 0);
+        const f = fmt(it.f, it.f % 1 ? 1 : 0);
+        nums.textContent = `${kcal} kcal • P ${p}g • C ${c}g • G ${f}g`;
+
+        name.appendChild(nm);
+        name.appendChild(nums);
+
+        const tags = document.createElement("div");
+        tags.className = "tags";
+
+        const pill = document.createElement("span");
+        pill.className = "pill " + (it.kind === "mandatory" ? "mand" : "opt");
+        pill.textContent = it.kind === "mandatory" ? "Obrigatório" : "Opcional";
+        tags.appendChild(pill);
+
+        if (it.mx === "ajuste_final"){
+          const p2 = document.createElement("span");
+          p2.className = "pill";
+          p2.textContent = "Escolha 1";
+          tags.appendChild(p2);
+        }
+
+        meta.appendChild(name);
+        meta.appendChild(tags);
+
+        wrap.appendChild(cb);
+        wrap.appendChild(meta);
+
+        itemsDiv.appendChild(wrap);
+      });
+
+      sec.appendChild(itemsDiv);
+      container.appendChild(sec);
+    });
+
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = !!getDayData().closed);
+  }
+
+  function sumSelected(containerId, items){
+    const container = document.getElementById(containerId);
+    let totals = { kcal:0, p:0, c:0, f:0 };
+    items.forEach(it => {
+      const cb = container.querySelector(`#${CSS.escape(it.id)}`);
+      if (cb && cb.checked){
+        totals.kcal += it.kcal;
+        totals.p += it.p;
+        totals.c += it.c;
+        totals.f += it.f;
+      }
+    });
+    return totals;
+  }
+
+  // Dashboard + donut
+  function pct(a,b){ if (!b) return 0; return Math.max(0, Math.min(200, (a/b)*100)); }
+
+  function drawDonut(percent){
+    const canvas = document.getElementById("donut");
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+    const cx = w/2, cy = h/2;
+
+    ctx.clearRect(0,0,w,h);
+    const ringW = 18, radius = 86;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI*2);
+    ctx.strokeStyle = "rgba(255,255,255,.10)";
+    ctx.lineWidth = ringW;
+    ctx.stroke();
+
+    const p = Math.max(0, Math.min(100, percent));
+    const start = -Math.PI/2;
+    const end = start + (Math.PI*2) * (p/100);
+
+    const grad = ctx.createLinearGradient(cx-radius, cy, cx+radius, cy);
+    grad.addColorStop(0, "rgba(77,163,255,.95)");
+    grad.addColorStop(1, "rgba(53,208,127,.95)");
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, start, end);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = ringW;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(232,240,255,.95)";
+    ctx.font = "800 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`${Math.round(percent)}%`, cx, cy - 6);
+
+    ctx.fillStyle = "rgba(159,176,195,.95)";
+    ctx.font = "700 12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.fillText("Meta do dia (kcal)", cx, cy + 22);
+  }
+
+  function updateDashboard(){
+    const day = getDayData();
+    const plan = getPlanForActiveDate();
+
+    const totals = (plan.plan === "weekend")
+      ? sumSelected("checklistWeekend", plan.items)
+      : sumSelected("checklist", plan.items);
+
+    document.getElementById("kcalTarget").textContent = plan.target.kcal;
+    document.getElementById("pTarget").textContent = plan.target.p;
+    document.getElementById("cTarget").textContent = plan.target.c;
+    document.getElementById("fTarget").textContent = plan.target.f;
+
+    const kcalPct = pct(totals.kcal, plan.target.kcal);
+    document.getElementById("pctPill").textContent = `${fmt(kcalPct,0)}%`;
+    document.getElementById("barFill").style.width = Math.min(100, kcalPct) + "%";
+
+    document.getElementById("kcalNow").textContent = fmt(totals.kcal,0);
+    document.getElementById("pNow").textContent = `${fmt(totals.p,0)} g`;
+    document.getElementById("cNow").textContent = `${fmt(totals.c,0)} g`;
+    document.getElementById("fNow").textContent = `${fmt(totals.f,0)} g`;
+
+    const dk = plan.target.kcal - totals.kcal;
+    const dp = plan.target.p - totals.p;
+    const dc = plan.target.c - totals.c;
+    const df = plan.target.f - totals.f;
+
+    const status = document.getElementById("statusPill");
+    const summary = document.getElementById("summaryText");
+
+    const parts = [];
+    parts.push(`<b>Plano do dia:</b> ${plan.plan === "weekend" ? "Fim de semana (cardio/HIIT)" : "Seg–Sex (treino)"}.`);
+    parts.push(`<br/><b>Consumido:</b> ${fmt(totals.kcal,0)} kcal (P ${fmt(totals.p,0)}g • C ${fmt(totals.c,0)}g • G ${fmt(totals.f,0)}g).`);
+    parts.push(`<br/><b>Saldo (meta):</b> ${dk >= 0 ? "faltam" : "passou"} <b>${fmt(Math.abs(dk),0)} kcal</b> • Proteína ${dp >= 0 ? "faltam" : "passou"} ${fmt(Math.abs(dp),0)}g • Carbo ${dc >= 0 ? "faltam" : "passou"} ${fmt(Math.abs(dc),0)}g • Gordura ${df >= 0 ? "faltam" : "passou"} ${fmt(Math.abs(df),0)}g.`);
+
+    if (plan.plan === "weekday"){
+      const ajuste = document.querySelectorAll('#checklist input[data-mx="ajuste_final"]:checked').length;
+      let hints = [];
+      if (ajuste === 0) hints.push("Você ainda não escolheu o <b>Ajuste final</b> (escolha 1).");
+      else if (ajuste > 1) hints.push("Você marcou mais de um item no <b>Ajuste final</b>. É <b>apenas 1</b>.");
+      const patinho = document.getElementById("d_patinho200")?.checked;
+      const chickenAlt = document.getElementById("d_chicken200")?.checked;
+      if (patinho && chickenAlt) hints.push("No jantar você marcou <b>patinho</b> e <b>frango</b> juntos. É <b>um ou outro</b>.");
+      if (hints.length) parts.push(`<br/><br/><span style="color: var(--warn)"><b>Atenção:</b> ${hints.join(" ")}</span>`);
+    }
+
+    if (kcalPct < 85) status.textContent = "Abaixo do alvo";
+    else if (kcalPct <= 105) status.textContent = "No trilho";
+    else status.textContent = "Acima do alvo";
+
+    // Expenditure
+    const exp = Number(day.expenditure_kcal || 0);
+    if (exp > 0){
+      const net = exp - totals.kcal;
+      const ratio = (totals.kcal / exp) * 100;
+      netPill.textContent = `Saldo: ${net >= 0 ? "Déficit" : "Superávit"} ${fmt(Math.abs(net),0)} kcal`;
+      burnPill.textContent = `Consumo/Gasto: ${fmt(ratio,0)}%`;
+      burnBarFill.style.width = `${Math.max(0, Math.min(100, ratio))}%`;
+    } else {
+      netPill.textContent = "Saldo: —";
+      burnPill.textContent = "Consumo/Gasto: —";
+      burnBarFill.style.width = "0%";
+    }
+
+    summary.innerHTML = parts.join("");
+    drawDonut(Math.min(100, kcalPct));
+
+    dayLabel.textContent = weekdayLabel(parseISODate(activeDate)) + (day.closed ? " • FECHADO" : " • ABERTO");
+    dayPicker.value = activeDate;
+
+    expenditureInput.value = day.expenditure_kcal ?? "";
+    expenditureInput.disabled = !!day.closed;
+  }
+
+  // Day nav + open/close
+  function loadDay(dateISO){
+    activeDate = dateISO;
+    ensureDay(activeDate);
+    const day = getDayData();
+    renderChecklist("checklist", ITEMS_WEEKDAY, day.weekday_state);
+    renderChecklist("checklistWeekend", ITEMS_WEEKEND, day.weekend_state);
+    updateAll();
+  }
+  function shiftDay(delta){
+    const d = parseISODate(activeDate);
+    d.setDate(d.getDate() + delta);
+    loadDay(toISODate(d));
+  }
+  document.getElementById("btnPrevDay").addEventListener("click", () => shiftDay(-1));
+  document.getElementById("btnNextDay").addEventListener("click", () => shiftDay(1));
+  dayPicker.addEventListener("change", (e) => { if (e.target.value) loadDay(e.target.value); });
+
+  document.getElementById("btnCloseDay").addEventListener("click", () => { const day=getDayData(); day.closed=true; saveStore(store); loadDay(activeDate); });
+  document.getElementById("btnOpenDay").addEventListener("click", () => { const day=getDayData(); day.closed=false; saveStore(store); loadDay(activeDate); });
+
+  expenditureInput.addEventListener("input", (e) => {
+    const day = getDayData();
+    if (day.closed) return;
+    day.expenditure_kcal = e.target.value;
+    saveStore(store);
+    updateAll();
+  });
+
+  // Diet actions
+  function resetChecklist(plan){
+    const day = getDayData();
+    if (day.closed) return;
+    const obj = plan === "weekend" ? day.weekend_state : day.weekday_state;
+    Object.keys(obj).forEach(k => delete obj[k]);
+    saveStore(store);
+    loadDay(activeDate);
+  }
+  function checkAllMandatoryWeekday(){
+    const day = getDayData();
+    if (day.closed) return;
+    ITEMS_WEEKDAY.forEach(it => { if (it.kind === "mandatory") day.weekday_state[it.id] = true; });
+
+    const mxGroups = {};
+    ITEMS_WEEKDAY.forEach(it => {
+      if (it.mx && day.weekday_state[it.id]) {
+        if (!mxGroups[it.mx]) mxGroups[it.mx] = it.id;
+        else day.weekday_state[it.id] = false;
+      }
+    });
+    saveStore(store);
+    loadDay(activeDate);
+  }
+  document.getElementById("btnResetDiet").addEventListener("click", () => resetChecklist("weekday"));
+  document.getElementById("btnResetDiet2").addEventListener("click", () => resetChecklist("weekday"));
+  document.getElementById("btnResetWeekend").addEventListener("click", () => resetChecklist("weekend"));
+  document.getElementById("btnCheckAllMand").addEventListener("click", checkAllMandatoryWeekday);
+
+  // Shop (mantém)
+  const SHOP_KEY = "shop_checklist_v1";
+  const shopState = (() => { try { return JSON.parse(localStorage.getItem(SHOP_KEY) || "{}"); } catch { return {}; } })();
+  const saveShop = () => localStorage.setItem(SHOP_KEY, JSON.stringify(shopState));
+
+  const SHOP_ITEMS = [
+    { id:"shop_eggs", name:"Ovos (inteiros – inclui claras)", daily:"6 ovos/dia (2 café + 4 usadas como claras) + opcional 2 na ceia", weekly:"Base: 42 ovos/semana • Com ceia opcional: até 56 ovos" },
+    { id:"shop_chicken", name:"Frango", daily:"Seg–Sex: 200 g almoço + (fim de semana: 400 g)", weekly:"Seg–Sex: 1,0 kg • Fds: 0,8 kg • Total: 1,8 kg" },
+    { id:"shop_beef", name:"Patinho moído", daily:"200 g/dia (jantar seg–sex)", weekly:"1,0 kg/semana (200 g x 5)" },
+    { id:"shop_sweetpotato", name:"Batata-doce", daily:"Seg–Sex: 250 g/dia • Fds: 180 g/dia", weekly:"Seg–Sex: 1,25 kg • Fds: 0,36 kg • Total: ~1,61 kg" },
+    { id:"shop_rice", name:"Arroz branco", daily:"Seg–Sex: 120 g cozido/dia • Fds: 80 g cozido/dia", weekly:"Total: ~760 g cozido (base)" },
+    { id:"shop_veg", name:"Legumes (variados)", daily:"à vontade (almoço + jantar)", weekly:"Compre para 7 dias (volume livre)" },
+    { id:"shop_oliveoil", name:"Azeite de oliva", daily:"15 g/dia (almoço + jantar)", weekly:"105 g/semana" },
+    { id:"shop_banana", name:"Banana", daily:"Seg–Sex: 1–2/dia • Fds: 1/dia", weekly:"Base: 9 • Se usar opcional: até 14" },
+    { id:"shop_yogurt", name:"Iogurte natural zero", daily:"170 g/dia", weekly:"≈ 1,2 kg/semana (7 unidades)" },
+    { id:"shop_pb", name:"Pasta de amendoim", daily:"Seg–Sex: 20 g/dia • Fds: 15 g/dia", weekly:"Total: ~130 g" },
+    { id:"shop_whey", name:"Whey protein", daily:"60 g/dia", weekly:"≈ 420 g/semana (14 doses)" },
+    { id:"shop_oats", name:"Aveia", daily:"Ajuste final (opção) 20 g", weekly:"140 g/semana (se escolher aveia)" },
+    { id:"shop_cashew", name:"Castanha de caju", daily:"Ajuste final (opção) 15 g", weekly:"105 g/semana (se escolher castanha)" }
+  ];
+
+  function renderShop(){
+    const shopList = document.getElementById("shopList");
+    shopList.innerHTML = "";
+
+    SHOP_ITEMS.forEach(it => {
+      const row = document.createElement("div");
+      row.className = "shop-item";
+
+      const left = document.createElement("div");
+      left.className = "left";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = it.id;
+      cb.checked = !!shopState[it.id];
+
+      cb.addEventListener("change", (e) => {
+        shopState[it.id] = e.target.checked;
+        saveShop();
+        updateShopProgress();
+      });
+
+      const block = document.createElement("div");
+      const title = document.createElement("div");
+      title.className = "title";
+      title.textContent = it.name;
+
+      const qty = document.createElement("div");
+      qty.className = "qty";
+      qty.innerHTML = `<b>Uso diário:</b> ${it.daily}<br/><b>Para 1 semana:</b> ${it.weekly}`;
+
+      block.appendChild(title);
+      block.appendChild(qty);
+
+      left.appendChild(cb);
+      left.appendChild(block);
+
+      row.appendChild(left);
+      shopList.appendChild(row);
+    });
+
+    updateShopProgress();
+  }
+
+  function updateShopProgress(){
+    const total = SHOP_ITEMS.length;
+    let done = 0;
+    SHOP_ITEMS.forEach(it => { if (document.getElementById(it.id)?.checked) done++; });
+    const percent = total ? Math.round((done/total)*100) : 0;
+    document.getElementById("shopPctPill").textContent = `${percent}% comprado`;
+    document.getElementById("shopBarFill").style.width = `${percent}%`;
+  }
+
+  function shopAll(){ SHOP_ITEMS.forEach(it => shopState[it.id] = true); saveShop(); renderShop(); }
+  function shopReset(){ Object.keys(shopState).forEach(k => delete shopState[k]); saveShop(); renderShop(); }
+
+  document.getElementById("btnShopAll").addEventListener("click", shopAll);
+  document.getElementById("btnShopReset").addEventListener("click", shopReset);
+
+  function updateAll(){
+    updateDashboard();
+    updateShopProgress();
+  }
+
+  function init(){
+    activeDate = toISODate(new Date());
+    ensureDay(activeDate);
+    const day = getDayData();
+    renderChecklist("checklist", ITEMS_WEEKDAY, day.weekday_state);
+    renderChecklist("checklistWeekend", ITEMS_WEEKEND, day.weekend_state);
+    renderShop();
+    dayPicker.value = activeDate;
+    updateAll();
+  }
+
+  window.addEventListener("load", init);
+</script>
+</body>
